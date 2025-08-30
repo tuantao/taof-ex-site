@@ -127,3 +127,27 @@ document.getElementById('btnExportResults').addEventListener('click', () => {
 // Chạy lần đầu để hiển thị đúng và tải kết quả
 updateVisibility();
 document.addEventListener('DOMContentLoaded', loadScanResults);
+// ... (code cũ của bạn)
+
+// === SỰ KIỆN MỚI: Nút Tải Dữ Liệu Bạn Bè ===
+document.getElementById('btnFetchFriends').addEventListener('click', () => {
+    statusEl.textContent = 'Đang gửi lệnh tải danh sách bạn bè... Vui lòng chờ...';
+    sendCommand({ cmd: "PROXY_FETCH_ALL_FRIENDS" }, (response) => {
+        if (response && response.status === 'success' && response.friends) {
+            statusEl.textContent = `Tải thành công! Tìm thấy ${response.friends.length} bạn bè.`;
+            console.log("Đã nhận được danh sách bạn bè:", response.friends);
+            
+            // Ở các bước sau, chúng ta sẽ hiển thị dữ liệu này ra bảng
+            // Tạm thời chỉ hiển thị ở console
+            alert(`Tải thành công! Tìm thấy ${response.friends.length} bạn bè. Kiểm tra Console (F12) để xem chi tiết.`);
+
+        } else {
+            statusEl.textContent = "Tải danh sách bạn bè thất bại.";
+            console.error(response);
+        }
+    });
+});
+
+// Chạy lần đầu để hiển thị đúng và tải kết quả
+updateVisibility();
+document.addEventListener('DOMContentLoaded', loadScanResults);
