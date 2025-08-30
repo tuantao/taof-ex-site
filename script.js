@@ -1,5 +1,5 @@
 // Thay 'ID_EXTENSION_CUA_BAN' bằng ID thật của extension
-const EXTENSION_ID = "fkpnaoopfgpaffaocpfempnpdceobcdg"; // <-- THAY ID CỦA BẠN VÀO ĐÂY
+const EXTENSION_ID = "epmonfbcjiklobbhjkjkgkjaclnknmmk"; // <-- THAY ID CỦA BẠN VÀO ĐÂY
 
 // DOM Elements
 const statusEl = document.getElementById('status');
