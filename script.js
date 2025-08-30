@@ -4,6 +4,11 @@ const EXTENSION_ID = "epmonfbcjiklobbhjkjkgkjaclnknmmk"; // <-- THAY ID CỦA B�
 const statusEl = document.getElementById('status');
 const modeEl = document.getElementById('mode');
 
+// === CÁC BIẾN MỚI CHO PHẦN KẾT QUẢ ===
+const resultsCardEl = document.getElementById('resultsCard');
+const scanSummaryEl = document.getElementById('scanSummary');
+const resultsTextareaEl = document.getElementById('resultsTextarea');
+
 // Hàm gửi lệnh đến extension
 function sendCommand(command, callback) {
     statusEl.textContent = `Đang gửi lệnh: ${command.cmd}...`;
@@ -15,6 +20,23 @@ function sendCommand(command, callback) {
             callback(response);
         } else {
             statusEl.textContent = `Phản hồi từ lệnh ${command.cmd}: ${JSON.stringify(response)}`;
+        }
+    });
+}
+
+// === HÀM MỚI: Tải kết quả đã lưu từ extension ===
+function loadScanResults() {
+    sendCommand({ cmd: "PROXY_GET_SCAN_RESULTS" }, (response) => {
+        if (response && response.status === 'success' && response.data.friends && response.data.friends.length > 0) {
+            const friends = response.data.friends;
+            const timestamp = response.data.timestamp ? new Date(response.data.timestamp).toLocaleString('vi-VN') : 'Không rõ';
+            
+            resultsCardEl.classList.remove('hidden');
+            scanSummaryEl.textContent = `Tìm thấy ${friends.length} bạn bè không tương tác. Lần quét cuối: ${timestamp}.`;
+            resultsTextareaEl.value = friends.join('\n');
+            statusEl.textContent = "Đã tải kết quả quét lần trước.";
+        } else {
+            statusEl.textContent = "Không tìm thấy kết quả quét nào đã lưu.";
         }
     });
 }
@@ -89,5 +111,19 @@ document.getElementById('scanGroups').addEventListener('click', () => {
     });
 });
 
-// Chạy lần đầu để hiển thị đúng
+
+// === SỰ KIỆN MỚI: Nút Export kết quả quét bạn bè ===
+document.getElementById('btnExportResults').addEventListener('click', () => {
+    sendCommand({ cmd: "PROXY_EXPORT_SCAN_RESULTS" }, (response) => {
+        if (response && response.status === 'success') {
+            statusEl.textContent = "Lệnh export đã được gửi. Trình duyệt sẽ sớm mở hộp thoại lưu file.";
+        } else {
+            statusEl.textContent = "Export thất bại. Có thể chưa có dữ liệu để export.";
+        }
+    });
+});
+
+
+// Chạy lần đầu để hiển thị đúng và tải kết quả
 updateVisibility();
+document.addEventListener('DOMContentLoaded', loadScanResults);

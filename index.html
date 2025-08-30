@@ -69,6 +69,19 @@
         <div id="groupList" style="margin-top: 1rem;"><i>Chưa có nhóm. Bấm “Quét nhóm”.</i></div>
     </div>
 
+    <div id="resultsCard" class="card hidden">
+        <h3>Kết Quả Quét Bạn Bè Không Tương Tác</h3>
+        <p id="scanSummary">Chưa có dữ liệu.</p>
+        <textarea id="resultsTextarea" rows="10" readonly style="width: 100%; background-color: #f1f1f1;"></textarea>
+        <button id="btnExportResults" style="margin-top: 0.5rem;">Export ra file CSV</button>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button id="btnStart" class="primary">Start</button>
+            </div>
+    </div>
+    
     <div class="card">
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <button id="btnStart" class="primary">Start</button>
