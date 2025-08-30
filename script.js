@@ -1,36 +1,93 @@
 // Thay 'ID_EXTENSION_CUA_BAN' bằng ID thật của extension
-const EXTENSION_ID = "epmonfbcjiklobbhjkjkgkjaclnknmmk"; 
+const EXTENSION_ID = "epmonfbcjiklobbhjkjkgkjaclnknmmk"; // <-- THAY ID CỦA BẠN VÀO ĐÂY
 
 const statusEl = document.getElementById('status');
+const modeEl = document.getElementById('mode');
 
-// Gắn sự kiện cho các nút
-document.getElementById('btnScanGroups').addEventListener('click', () => {
-    statusEl.textContent = 'Đang gửi lệnh quét nhóm...';
-    chrome.runtime.sendMessage(EXTENSION_ID, { cmd: "PROXY_SCAN_GROUPS" }, (response) => {
-        if (response && response.status === 'started') {
-            statusEl.textContent = 'Extension đã bắt đầu quét nhóm!';
-        } else {
-            statusEl.textContent = 'Lỗi: Không thể kết nối đến extension. Bạn đã cài đặt chưa?';
-            console.error(response);
-        }
-    });
-});
-
-document.getElementById('btnScanFriends').addEventListener('click', () => {
-    const limit = document.getElementById('postLimit').value;
-    statusEl.textContent = 'Đang gửi lệnh quét bạn bè...';
-    
-    const command = {
-        cmd: "PROXY_SCAN_FRIENDS",
-        limit: parseInt(limit, 10) || 50
-    };
-
+// Hàm gửi lệnh đến extension
+function sendCommand(command, callback) {
+    statusEl.textContent = `Đang gửi lệnh: ${command.cmd}...`;
     chrome.runtime.sendMessage(EXTENSION_ID, command, (response) => {
-        if (response && response.status === 'started') {
-            statusEl.textContent = 'Extension đã bắt đầu quét bạn bè không tương tác!';
+        if (chrome.runtime.lastError) {
+            statusEl.textContent = 'Lỗi: Không thể kết nối đến extension. Bạn đã cài đặt và tải lại nó chưa?';
+            console.error(chrome.runtime.lastError.message);
+        } else if (callback) {
+            callback(response);
         } else {
-            statusEl.textContent = 'Lỗi: Không thể kết nối đến extension.';
-            console.error(response);
+            statusEl.textContent = `Phản hồi từ lệnh ${command.cmd}: ${JSON.stringify(response)}`;
+        }
+    });
+}
+
+// Hàm cập nhật giao diện dựa trên chế độ được chọn
+function updateVisibility() {
+    const mode = modeEl.value;
+    document.getElementById('boxFilters').classList.toggle('hidden', !["ADD", "ACCEPT_INCOMING", "UNFRIEND"].includes(mode));
+    document.getElementById('boxList').classList.toggle('hidden', !["ADD_FROM_LIST", "PAGES_UNFOLLOW", "PAGES_UNLIKE", "GROUPS_JOIN"].includes(mode));
+    document.getElementById('groupAssistBox').classList.toggle('hidden', mode !== "GROUPS_POST_ASSIST");
+}
+
+// Bắt sự kiện thay đổi chế độ
+modeEl.addEventListener('change', updateVisibility);
+
+// Nút Start
+document.getElementById('btnStart').addEventListener('click', () => {
+    const config = {
+        mode: modeEl.value,
+        maxPerRun: parseInt(document.getElementById('limit').value, 10),
+        minDelayMs: parseInt(document.getElementById('minDelay').value, 10),
+        maxDelayMs: parseInt(document.getElementById('maxDelay').value, 10),
+        minMutual: parseInt(document.getElementById('minMutual').value, 10),
+        inc: document.getElementById('nameInclude').value,
+        exc: document.getElementById('nameExclude').value,
+        gender: document.getElementById('gender').value,
+        region: document.getElementById('region').value,
+        minFriends: parseInt(document.getElementById('minFriends').value, 10),
+        ageMin: parseInt(document.getElementById('ageMin').value, 10),
+        ageMax: parseInt(document.getElementById('ageMax').value, 10),
+        postText: document.getElementById('postText').value,
+        scanPostLimit: parseInt(document.getElementById('scanPostLimit').value, 10)
+    };
+    
+    const urls = document.getElementById('urls').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const groups = Array.from(document.querySelectorAll('#groupList input:checked')).map(chk => chk.dataset.url);
+    
+    let queue = [];
+    if (["ADD_FROM_LIST", "PAGES_UNFOLLOW", "PAGES_UNLIKE", "GROUPS_JOIN"].includes(config.mode)) {
+        queue = urls;
+    } else if (config.mode === "GROUPS_POST_ASSIST") {
+        queue = groups;
+    }
+
+    sendCommand({ cmd: "PROXY_START", config, queue }, (res) => {
+        statusEl.textContent = "Lệnh START đã được gửi đến extension.";
+    });
+});
+
+// Các nút điều khiển khác
+document.getElementById('btnStop').addEventListener('click', () => sendCommand({ cmd: "PROXY_STOP" }));
+document.getElementById('btnPause').addEventListener('click', () => sendCommand({ cmd: "PROXY_PAUSE" }));
+document.getElementById('btnResume').addEventListener('click', () => sendCommand({ cmd: "PROXY_RESUME" }));
+document.getElementById('btnExport').addEventListener('click', () => sendCommand({ cmd: "PROXY_EXPORT_CSV" }));
+document.getElementById('btnClear').addEventListener('click', () => sendCommand({ cmd: "PROXY_CLEAR_LOG" }));
+
+// Nút quét nhóm
+document.getElementById('scanGroups').addEventListener('click', () => {
+    sendCommand({ cmd: "PROXY_SCAN_GROUPS" }, (response) => {
+        if (response && response.groups) {
+            const groupListEl = document.getElementById('groupList');
+            groupListEl.innerHTML = response.groups.map(g => `
+                <label>
+                    <input type="checkbox" data-url="${g.url}" checked />
+                    ${g.name}
+                </label>
+            `).join('<br>');
+            statusEl.textContent = `Đã quét xong và tìm thấy ${response.groups.length} nhóm.`;
+        } else {
+            statusEl.textContent = "Quét nhóm thất bại hoặc không tìm thấy nhóm nào.";
         }
     });
 });
+
+// Chạy lần đầu để hiển thị đúng
+updateVisibility();

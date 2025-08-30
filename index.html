@@ -3,24 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <title>Bảng Điều Khiển TaoF</title>
-    </head>
+    <style>
+        body { font-family: system-ui, sans-serif; line-height: 1.5; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        .card { border: 1px solid #ccc; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+        .hidden { display: none; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        label { display: block; margin-bottom: 0.25rem; font-weight: 500; }
+        input, select, textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc; }
+        button { padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid transparent; cursor: pointer; }
+        .primary { background-color: #007bff; color: white; }
+        #groupList { max-height: 180px; overflow:auto; border:1px dashed #ccc; padding:8px; background:#f9f9f9; }
+        #status { margin-top: 1rem; padding: 1rem; background-color: #f0f0f0; border-radius: 8px; }
+    </style>
+</head>
 <body>
     <h1>Bảng Điều Khiển TaoF</h1>
-    
     <div class="card">
-        <h2>Quét Nhóm</h2>
-        <button id="btnScanGroups">Bắt đầu quét nhóm</button>
+        <label for="mode">Chế độ</label>
+        <select id="mode">
+            <option value="ADD">Friends: Kết bạn (Suggestions)</option>
+            <option value="ADD_FROM_LIST">Friends: Kết bạn theo danh sách</option>
+            <option value="ACCEPT_INCOMING">Friends: Đồng ý lời mời</option>
+            <option value="CANCEL_SENT">Friends: Hủy lời mời đã gửi</option>
+            <option value="UNFRIEND">Friends: Huỷ kết bạn</option>
+            <option value="SCAN_NON_INTERACTIVE">Friends: Quét bạn bè không tương tác</option>
+            <option value="PAGES_UNFOLLOW">Pages: Bỏ theo dõi</option>
+            <option value="PAGES_UNLIKE">Pages: Bỏ thích</option>
+            <option value="GROUPS_JOIN">Groups: Xin vào nhóm</option>
+            <option value="GROUPS_POST_ASSIST">Groups: Đăng bài (Assist)</option>
+        </select>
     </div>
 
     <div class="card">
-        <h2>Lọc Bạn Bè Không Tương Tác</h2>
-        <label for="postLimit">Số bài viết cần quét:</label>
-        <input type="number" id="postLimit" value="50">
-        <button id="btnScanFriends">Bắt đầu quét bạn bè</button>
+        <div class="grid2">
+            <div><label>Giới hạn / phiên</label><input id="limit" type="number" value="50"></div>
+            <div><label>Số bài viết cần quét</label><input id="scanPostLimit" type="number" value="50"></div>
+            <div><label>Delay min (ms)</label><input id="minDelay" type="number" value="500"></div>
+            <div><label>Delay max (ms)</label><input id="maxDelay" type="number" value="1200"></div>
+        </div>
+    </div>
+
+    <div id="boxFilters" class="card hidden">
+        <h4>Bộ Lọc Chi Tiết</h4>
+        <div class="grid2">
+            <div><label>Bạn chung tối thiểu</label><input id="minMutual" type="number" value="0"></div>
+            <div><label>Giới tính</label><select id="gender"><option value="ANY">ANY</option><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option></select></div>
+            <div><label>Tên chứa</label><input id="nameInclude" type="text" placeholder="ví dụ: anh, nguyen"></div>
+            <div><label>Tên loại trừ</label><input id="nameExclude" type="text" placeholder="ví dụ: shop, sale"></div>
+            <div><label>Khu vực chứa</label><input id="region" type="text" placeholder="Ha Noi / Hanoi / Hà Nội"></div>
+            <div><label>Bạn bè tối thiểu</label><input id="minFriends" type="number" value="0"></div>
+            <div><label>Tuổi min</label><input id="ageMin" type="number" value="0"></div>
+            <div><label>Tuổi max</label><input id="ageMax" type="number" value="0"></div>
+        </div>
+    </div>
+
+    <div id="boxList" class="card hidden">
+        <label>Danh sách URL / UID / từ khoá (mỗi dòng 1 mục)</label>
+        <textarea id="urls" rows="6"></textarea>
+    </div>
+
+    <div id="groupAssistBox" class="card hidden">
+        <label>Nội dung bài viết</label>
+        <textarea id="postText" rows="5"></textarea>
+        <button id="scanGroups" style="margin-top: 0.5rem;">Quét nhóm (yêu cầu tab FB đang mở)</button>
+        <div id="groupList" style="margin-top: 1rem;"><i>Chưa có nhóm. Bấm “Quét nhóm”.</i></div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button id="btnStart" class="primary">Start</button>
+            <button id="btnPause">Pause</button>
+            <button id="btnResume">Resume</button>
+            <button id="btnStop">Stop</button>
+            <button id="btnExport">Export CSV</button>
+            <button id="btnClear">Clear Log</button>
+        </div>
     </div>
 
     <div id="status">Trạng thái: Sẵn sàng</div>
-
     <script src="script.js"></script>
 </body>
 </html>
