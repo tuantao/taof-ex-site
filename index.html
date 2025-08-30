@@ -4,20 +4,25 @@
     <meta charset="UTF-8">
     <title>Bảng Điều Khiển TaoF</title>
     <style>
-        body { font-family: system-ui, sans-serif; line-height: 1.5; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-        .card { border: 1px solid #ccc; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+        body { font-family: system-ui, sans-serif; line-height: 1.5; max-width: 600px; margin: 2rem auto; padding: 0 1rem; background-color: #f4f7f9; }
+        .card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h1, h3 { color: #333; }
         .hidden { display: none; }
         .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        label { display: block; margin-bottom: 0.25rem; font-weight: 500; }
+        label { display: block; margin-bottom: 0.25rem; font-weight: 500; color: #555; }
         input, select, textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc; }
-        button { padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid transparent; cursor: pointer; }
+        button { padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
         .primary { background-color: #007bff; color: white; }
+        .primary:hover { background-color: #0056b3; }
+        .secondary { background-color: #6c757d; color: white; }
+        .secondary:hover { background-color: #5a6268; }
         #groupList { max-height: 180px; overflow:auto; border:1px dashed #ccc; padding:8px; background:#f9f9f9; }
-        #status { margin-top: 1rem; padding: 1rem; background-color: #f0f0f0; border-radius: 8px; }
+        #status { margin-top: 1rem; padding: 1rem; background-color: #e9ecef; border-radius: 8px; text-align: center; color: #495057; }
     </style>
 </head>
 <body>
     <h1>Bảng Điều Khiển TaoF</h1>
+
     <div class="card">
         <label for="mode">Chế độ</label>
         <select id="mode">
@@ -33,16 +38,12 @@
             <option value="GROUPS_POST_ASSIST">Groups: Đăng bài (Assist)</option>
         </select>
     </div>
-        </select>
-    </div>
 
     <div class="card">
         <h3>Tải Dữ Liệu</h3>
         <p>Bấm nút dưới đây để tải danh sách bạn bè từ Facebook. Quá trình này có thể mất vài phút.</p>
         <button id="btnFetchFriends" class="primary">Tải/Làm Mới Danh Sách Bạn Bè</button>
     </div>
-
-    <div class="card">
 
     <div class="card">
         <div class="grid2">
@@ -75,31 +76,25 @@
     <div id="groupAssistBox" class="card hidden">
         <label>Nội dung bài viết</label>
         <textarea id="postText" rows="5"></textarea>
-        <button id="scanGroups" style="margin-top: 0.5rem;">Quét nhóm (yêu cầu tab FB đang mở)</button>
+        <button id="scanGroups" class="secondary" style="margin-top: 0.5rem;">Quét nhóm (yêu cầu tab FB đang mở)</button>
         <div id="groupList" style="margin-top: 1rem;"><i>Chưa có nhóm. Bấm “Quét nhóm”.</i></div>
     </div>
-
+    
     <div id="resultsCard" class="card hidden">
         <h3>Kết Quả Quét Bạn Bè Không Tương Tác</h3>
         <p id="scanSummary">Chưa có dữ liệu.</p>
         <textarea id="resultsTextarea" rows="10" readonly style="width: 100%; background-color: #f1f1f1;"></textarea>
-        <button id="btnExportResults" style="margin-top: 0.5rem;">Export ra file CSV</button>
+        <button id="btnExportResults" class="secondary" style="margin-top: 0.5rem;">Export ra file CSV</button>
     </div>
 
     <div class="card">
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <button id="btnStart" class="primary">Start</button>
-            </div>
-    </div>
-
-    <div class="card">
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <button id="btnStart" class="primary">Start</button>
-            <button id="btnPause">Pause</button>
-            <button id="btnResume">Resume</button>
-            <button id="btnStop">Stop</button>
-            <button id="btnExport">Export CSV</button>
-            <button id="btnClear">Clear Log</button>
+            <button id="btnPause" class="secondary">Pause</button>
+            <button id="btnResume" class="secondary">Resume</button>
+            <button id="btnStop" class="secondary">Stop</button>
+            <button id="btnExport" class="secondary">Export CSV (Log)</button>
+            <button id="btnClear" class="secondary">Clear Log</button>
         </div>
     </div>
 
