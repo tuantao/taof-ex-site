@@ -1,5 +1,19 @@
-// Thay 'ID_EXTENSION_CUA_BAN' bằng ID thật của extension
-const EXTENSION_ID = "epmonfbcjiklobbhjkjkgkjaclnknmmk"; // <-- THAY ID CỦA BẠN VÀO ĐÂY
+// --- Lấy Extension ID đúng cách ---
+// Ưu tiên: ?extId=... từ URL (mở qua popup) -> lưu vào localStorage.
+// Fallback: dùng cái đã lưu trước đó trong localStorage.
+// Nếu vẫn không có -> báo lỗi hướng dẫn mở Dashboard từ popup.
+function resolveExtensionId() {
+  const paramId = new URLSearchParams(location.search).get('extId');
+  if (paramId && /^[a-p]{32}$/i.test(paramId)) {
+    localStorage.setItem('taof_extId', paramId);
+    return paramId;
+  }
+  const saved = localStorage.getItem('taof_extId');
+  if (saved && /^[a-p]{32}$/i.test(saved)) return saved;
+  return null;
+}
+
+let EXTENSION_ID = "epmonfbcjiklobbhjkjkgkjaclnknmmk";
 
 // DOM Elements
 const statusEl = document.getElementById('status');
@@ -10,17 +24,27 @@ const resultsTextareaEl = document.getElementById('resultsTextarea');
 
 // Hàm gửi lệnh đến extension
 function sendCommand(command, callback) {
+    if (!EXTENSION_ID) {
+        statusEl.textContent = 'Không tìm thấy Extension ID. Vui lòng mở Dashboard từ popup của extension để tự động truyền ID.';
+        console.error('Missing EXTENSION_ID. Open via popup so URL has ?extId=');
+        return;
+    }
     statusEl.textContent = `Đang gửi lệnh: ${command.cmd}...`;
-    chrome.runtime.sendMessage(EXTENSION_ID, command, (response) => {
-        if (chrome.runtime.lastError) {
-            statusEl.textContent = 'Lỗi: Không thể kết nối đến extension. Bạn đã cài đặt và tải lại nó chưa?';
-            console.error(chrome.runtime.lastError.message);
-        } else if (callback) {
-            callback(response);
-        } else if (response) {
-            statusEl.textContent = `Phản hồi từ lệnh ${command.cmd}: ${response.status}`;
-        }
-    });
+    try {
+        chrome.runtime.sendMessage(EXTENSION_ID, command, (response) => {
+            if (chrome.runtime.lastError) {
+                statusEl.textContent = 'Lỗi: Không thể kết nối đến extension. Hãy kiểm tra: đã cài, đã bật, và đã Reload extension chưa?';
+                console.error(chrome.runtime.lastError.message);
+            } else if (callback) {
+                callback(response);
+            } else if (response) {
+                statusEl.textContent = `Phản hồi từ lệnh ${command.cmd}: ${response.status}`;
+            }
+        });
+    } catch (e) {
+        statusEl.textContent = 'Trình duyệt không hỗ trợ chrome.runtime ở trang này. Hãy mở bằng Chrome desktop.';
+        console.error(e);
+    }
 }
 
 // Tải kết quả đã lưu từ extension
@@ -29,10 +53,10 @@ function loadScanResults() {
         if (response && response.status === 'success' && response.data.friends && response.data.friends.length > 0) {
             const friends = response.data.friends;
             const timestamp = response.data.timestamp ? new Date(response.data.timestamp).toLocaleString('vi-VN') : 'Không rõ';
-            
             resultsCardEl.classList.remove('hidden');
             scanSummaryEl.textContent = `Tìm thấy ${friends.length} bạn bè không tương tác. Lần quét cuối: ${timestamp}.`;
-            resultsTextareaEl.value = friends.map(f => f.name).join('\n');
+            // friends có thể là mảng string hoặc object {name}. Hỗ trợ cả hai:
+            resultsTextareaEl.value = friends.map(f => (typeof f === 'string' ? f : f.name || '')).join('\n');
             statusEl.textContent = "Đã tải kết quả quét lần trước.";
         } else {
             statusEl.textContent = "Không tìm thấy kết quả quét nào đã lưu.";
@@ -58,28 +82,25 @@ function setupEventListeners() {
             maxPerRun: parseInt(document.getElementById('limit').value, 10),
             minDelayMs: parseInt(document.getElementById('minDelay').value, 10),
             maxDelayMs: parseInt(document.getElementById('maxDelay').value, 10),
-            minMutual: parseInt(document.getElementById('minMutual').value, 10),
-            inc: document.getElementById('nameInclude').value,
-            exc: document.getElementById('nameExclude').value,
-            gender: document.getElementById('gender').value,
-            region: document.getElementById('region').value,
-            minFriends: parseInt(document.getElementById('minFriends').value, 10),
-            ageMin: parseInt(document.getElementById('ageMin').value, 10),
-            ageMax: parseInt(document.getElementById('ageMax').value, 10),
-            postText: document.getElementById('postText').value,
-            scanPostLimit: parseInt(document.getElementById('scanPostLimit').value, 10)
+            minMutual: parseInt(document.getElementById('minMutual').value, 10) || 0,
+            inc: document.getElementById('nameInclude').value || "",
+            exc: document.getElementById('nameExclude').value || "",
+            gender: document.getElementById('gender').value || "ANY",
+            region: document.getElementById('region').value || "",
+            minFriends: parseInt(document.getElementById('minFriends').value, 10) || 0,
+            ageMin: parseInt(document.getElementById('ageMin').value, 10) || 0,
+            ageMax: parseInt(document.getElementById('ageMax').value, 10) || 0,
+            postText: document.getElementById('postText').value || "",
+            scanPostLimit: parseInt(document.getElementById('scanPostLimit').value, 10) || 50
         };
-        
-        const urls = document.getElementById('urls').value.split('\n').map(s => s.trim()).filter(Boolean);
+        const urls = (document.getElementById('urls').value || '').split('\n').map(s => s.trim()).filter(Boolean);
         const groups = Array.from(document.querySelectorAll('#groupList input:checked')).map(chk => chk.dataset.url);
-        
         let queue = [];
         if (["ADD_FROM_LIST", "PAGES_UNFOLLOW", "PAGES_UNLIKE", "GROUPS_JOIN"].includes(config.mode)) {
             queue = urls;
         } else if (config.mode === "GROUPS_POST_ASSIST") {
             queue = groups;
         }
-
         sendCommand({ cmd: "PROXY_START", config, queue });
     });
 
@@ -114,7 +135,7 @@ function setupEventListeners() {
                 statusEl.textContent = `Tải thành công! Tìm thấy ${response.friends.length} bạn bè.`;
                 console.log("Đã nhận được danh sách bạn bè:", response.friends);
                 alert(`Tải thành công! Tìm thấy ${response.friends.length} bạn bè. Kết quả sẽ sớm được hiển thị.`);
-                loadScanResults(); // Tải lại kết quả để hiển thị
+                loadScanResults();
             } else {
                 statusEl.textContent = "Tải danh sách bạn bè thất bại.";
                 console.error(response);
